@@ -2,7 +2,7 @@
 package remotewrite
 
 import (
-	"github.com/grafana/xk6-output-prometheus-remote/pkg/remotewrite"
+	"github.com/Penelopa23/xk6-output-prometheus-remote/pkg/remotewrite"
 	"go.k6.io/k6/output"
 )
 

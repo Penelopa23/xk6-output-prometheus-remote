@@ -5,7 +5,7 @@ COPY . .
 RUN apk --no-cache add git=~2
 RUN CGO_ENABLED=0 go install go.k6.io/xk6/cmd/xk6@latest  \
     && CGO_ENABLED=0 xk6 build \
-    --with github.com/grafana/xk6-output-prometheus-remote=. \
+    --with github.com/Penelopa23/xk6-output-prometheus-remote=. \
     --output /tmp/k6
 
 # Create image for running k6 with output for Prometheus remote write

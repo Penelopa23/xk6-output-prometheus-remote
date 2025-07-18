@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/grafana/xk6-output-prometheus-remote/pkg/sigv4"
+	"github.com/Penelopa23/xk6-output-prometheus-remote/pkg/sigv4"
 
 	prompb "buf.build/gen/go/prometheus/prometheus/protocolbuffers/go"
 	"github.com/klauspost/compress/snappy"

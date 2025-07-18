@@ -19,7 +19,7 @@ Consult the [Prometheus remote write guide in the k6 docs](https://k6.io/docs/re
 For developing or testing this extension, you can build a k6 binary with the local extension using [xk6](https://github.com/grafana/xk6) with the following steps:
 
 ```bash
-xk6 build --with github.com/grafana/xk6-output-prometheus-remote=. 
+xk6 build --with github.com/Penelopa23/xk6-output-prometheus-remote=. 
 ```
 
 For more details, refer to the k6 docs:
