@@ -231,6 +231,7 @@ func (o *Output) flush() {
 		o.logger.WithError(err).Error("Failed to send the time series data to the endpoint")
 		return
 	}
+	o.tsdb = make(map[metrics.TimeSeries]*seriesWithMeasure)
 }
 
 func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) []*prompb.TimeSeries {
