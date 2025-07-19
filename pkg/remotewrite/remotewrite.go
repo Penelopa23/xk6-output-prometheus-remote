@@ -195,10 +195,10 @@ func (o *Output) flush() {
 	}()
 
 	samplesContainers := o.GetBufferedSamples()
-	if len(samplesContainers) < 1 {
-		o.logger.Debug("no buffered samples, skip the flushing operation")
-		return
-	}
+	//if len(samplesContainers) < 1 {
+	//	o.logger.Debug("no buffered samples, skip the flushing operation")
+	//	return
+	//}
 
 	// Remote write endpoint accepts TimeSeries structure defined in gRPC. It must:
 	// a) contain Labels array
@@ -218,6 +218,7 @@ func (o *Output) flush() {
 	o.SampleBuffer = output.SampleBuffer{}
 	o.tsdb = make(map[metrics.TimeSeries]*seriesWithMeasure)
 	logMemory(o.logger)
+
 }
 
 func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) []*prompb.TimeSeries {
@@ -251,7 +252,7 @@ func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) 
 			swm, ok := o.tsdb[sample.TimeSeries]
 			if !ok {
 				// TODO: encapsulate the trend arguments into a Trend Mapping factory
-				//swm = newSeriesWithMeasure(sample.TimeSeries, o.config.TrendAsNativeHistogram.Bool, o.trendStatsResolver)
+				swm = newSeriesWithMeasure(sample.TimeSeries, o.config.TrendAsNativeHistogram.Bool)
 				swm.Latest = truncTime
 				o.tsdb[sample.TimeSeries] = swm
 				seen[sample.TimeSeries] = struct{}{}
@@ -302,6 +303,10 @@ func logMemory(logger logrus.FieldLogger) {
 		"Heap_MB":  m.HeapAlloc / 1024 / 1024,
 		"Objects":  m.Mallocs - m.Frees,
 	}).Info("Memory stats")
+	print(logrus.Fields{
+		"Alloc_MB": m.Alloc / 1024 / 1024,
+		"Heap_MB":  m.HeapAlloc / 1024 / 1024,
+		"Objects":  m.Mallocs - m.Frees})
 }
 
 type seriesWithMeasure struct {
@@ -351,16 +356,11 @@ func (swm seriesWithMeasure) MapPrompb() []*prompb.TimeSeries {
 		newts = []*prompb.TimeSeries{&ts}
 
 	case metrics.Trend:
-		// TODO:
-		//	- Add a PrompbMapSinker interface
-		//    and implements it on all the sinks "extending" them.
-		//  - Call directly MapPrompb on Measure without any type assertion.
-		//trend, ok := swm.Measure.(prompbMapper)
-		//if !ok {
-		//	panic("Measure for Trend types must implement MapPromPb")
-		//}
-		//newts = trend.MapPrompb(swm.TimeSeries, swm.Latest)
-		return nil
+		// Если swm.Measure реализует интерфейс prompbMapper (extendedTrendSink), вызвать его MapPrompb
+		if mapper, ok := swm.Measure.(prompbMapper); ok {
+			return mapper.MapPrompb(swm.TimeSeries, swm.Latest)
+		}
+		panic("Sink for Trend должен реализовывать MapPrompb")
 
 	default:
 		panic(
@@ -389,7 +389,7 @@ func newSeriesWithMeasure(
 	case metrics.Gauge:
 		sink = &metrics.GaugeSink{}
 	case metrics.Trend:
-		sink = &metrics.GaugeSink{}
+		sink = &extendedTrendSink{}
 	case metrics.Rate:
 		sink = &metrics.RateSink{}
 	default:

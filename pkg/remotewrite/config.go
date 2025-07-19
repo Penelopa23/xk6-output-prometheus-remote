@@ -94,7 +94,7 @@ func NewConfig() Config {
 		PushInterval:          types.NullDurationFrom(defaultPushInterval),
 		Headers:               make(map[string]string),
 		//TrendStats:            defaultTrendStats,
-		StaleMarkers:   null.BoolFrom(false),
+		//StaleMarkers:   null.BoolFrom(false),
 		SigV4Region:    null.NewString("", false),
 		SigV4AccessKey: null.NewString("", false),
 		SigV4SecretKey: null.NewString("", false),
@@ -198,13 +198,13 @@ func (conf Config) Apply(applied Config) Config {
 		conf.PushInterval = applied.PushInterval
 	}
 
-	if applied.TrendAsNativeHistogram.Valid {
-		conf.TrendAsNativeHistogram = applied.TrendAsNativeHistogram
-	}
-
-	if applied.StaleMarkers.Valid {
-		conf.StaleMarkers = applied.StaleMarkers
-	}
+	//if applied.TrendAsNativeHistogram.Valid {
+	//	conf.TrendAsNativeHistogram = applied.TrendAsNativeHistogram
+	//}
+	//
+	//if applied.StaleMarkers.Valid {
+	//	conf.StaleMarkers = applied.StaleMarkers
+	//}
 
 	if len(applied.Headers) > 0 {
 		for k, v := range applied.Headers {
@@ -212,10 +212,10 @@ func (conf Config) Apply(applied Config) Config {
 		}
 	}
 
-	if len(applied.TrendStats) > 0 {
-		conf.TrendStats = make([]string, len(applied.TrendStats))
-		copy(conf.TrendStats, applied.TrendStats)
-	}
+	//if len(applied.TrendStats) > 0 {
+	//	conf.TrendStats = make([]string, len(applied.TrendStats))
+	//	copy(conf.TrendStats, applied.TrendStats)
+	//}
 
 	if applied.ClientCertificate.Valid {
 		conf.ClientCertificate = applied.ClientCertificate
