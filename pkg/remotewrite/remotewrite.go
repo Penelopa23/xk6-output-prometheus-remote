@@ -231,7 +231,9 @@ func (o *Output) flush() {
 		o.logger.WithError(err).Error("Failed to send the time series data to the endpoint")
 		return
 	}
+	o.SampleBuffer = output.SampleBuffer{}
 	o.tsdb = make(map[metrics.TimeSeries]*seriesWithMeasure)
+
 }
 
 func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) []*prompb.TimeSeries {
@@ -384,22 +386,13 @@ func newSeriesWithMeasure(
 	case metrics.Gauge:
 		sink = &metrics.GaugeSink{}
 	case metrics.Trend:
-		// TODO: refactor encapsulating in a factory method
-		if trendAsNativeHistogram {
-			sink = newNativeHistogramSink(series.Metric)
-		} else {
-			var err error
-			sink, err = newExtendedTrendSink(tsr)
-			if err != nil {
-				// the resolver must be already validated
-				panic(err)
-			}
-		}
+		sink = &metrics.TrendSink{}
 	case metrics.Rate:
 		sink = &metrics.RateSink{}
 	default:
 		panic(fmt.Sprintf("metric type %q unsupported", series.Metric.Type.String()))
 	}
+
 	return &seriesWithMeasure{
 		TimeSeries: series,
 		Measure:    sink,
