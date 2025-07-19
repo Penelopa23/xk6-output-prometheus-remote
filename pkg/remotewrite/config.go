@@ -24,8 +24,10 @@ const (
 	defaultMetricPrefix = "k6_"
 )
 
+// var defaultTrendStats = []string{"p(99)"}
+//
 //nolint:gochecknoglobals
-var defaultTrendStats = []string{"p(99)"}
+var defaultTrendStats = []string{}
 
 // Config contains the configuration for the Output.
 type Config struct {
@@ -91,11 +93,11 @@ func NewConfig() Config {
 		Password:              null.NewString("", false),
 		PushInterval:          types.NullDurationFrom(defaultPushInterval),
 		Headers:               make(map[string]string),
-		TrendStats:            defaultTrendStats,
-		StaleMarkers:          null.BoolFrom(false),
-		SigV4Region:           null.NewString("", false),
-		SigV4AccessKey:        null.NewString("", false),
-		SigV4SecretKey:        null.NewString("", false),
+		//TrendStats:            defaultTrendStats,
+		StaleMarkers:   null.BoolFrom(false),
+		SigV4Region:    null.NewString("", false),
+		SigV4AccessKey: null.NewString("", false),
+		SigV4SecretKey: null.NewString("", false),
 	}
 }
 

@@ -4,7 +4,7 @@ package remotewrite
 import (
 	"context"
 	"fmt"
-	"strings"
+	"runtime"
 	"time"
 
 	"github.com/Penelopa23/xk6-output-prometheus-remote/pkg/remote"
@@ -23,12 +23,12 @@ var _ output.Output = new(Output)
 type Output struct {
 	output.SampleBuffer
 
-	config             Config
-	logger             logrus.FieldLogger
-	now                func() time.Time
-	periodicFlusher    *output.PeriodicFlusher
-	tsdb               map[metrics.TimeSeries]*seriesWithMeasure
-	trendStatsResolver map[string]func(*metrics.TrendSink) float64
+	config          Config
+	logger          logrus.FieldLogger
+	now             func() time.Time
+	periodicFlusher *output.PeriodicFlusher
+	tsdb            map[metrics.TimeSeries]*seriesWithMeasure
+	//trendStatsResolver map[string]func(*metrics.TrendSink) float64
 
 	// TODO: copy the prometheus/remote.WriteClient interface and depend on it
 	client *remote.WriteClient
@@ -64,11 +64,11 @@ func New(params output.Params) (*Output, error) {
 		tsdb:   make(map[metrics.TimeSeries]*seriesWithMeasure),
 	}
 
-	if len(config.TrendStats) > 0 {
-		if err := o.setTrendStatsResolver(config.TrendStats); err != nil {
-			return nil, err
-		}
-	}
+	//if len(config.TrendStats) > 0 {
+	//	if err := o.setTrendStatsResolver(config.TrendStats); err != nil {
+	//		return nil, err
+	//	}
+	//}
 	return o, nil
 }
 
@@ -94,25 +94,9 @@ func (o *Output) Stop() error {
 	o.logger.Debug("Stopping the output")
 	defer o.logger.Debug("Output stopped")
 	o.periodicFlusher.Stop()
-
-	if !o.config.StaleMarkers.Bool {
-		return nil
-	}
-	staleMarkers := o.staleMarkers()
-	if len(staleMarkers) < 1 {
-		o.logger.Debug("No time series to mark as stale")
-		return nil
-	}
-	o.logger.WithField("staleMarkers", len(staleMarkers)).Debug("Marking time series as stale")
-
-	err := o.client.Store(context.Background(), staleMarkers)
-	if err != nil {
-		return fmt.Errorf("marking time series as stale failed: %w", err)
-	}
 	return nil
 }
 
-// staleMarkers maps all the seen time series with a stale marker.
 func (o *Output) staleMarkers() []*prompb.TimeSeries {
 	// Add 1ms so in the extreme case that the time frame
 	// between the last and the next flush operation is under-millisecond,
@@ -150,46 +134,46 @@ func (o *Output) staleMarkers() []*prompb.TimeSeries {
 // setTrendStatsResolver sets the resolver for the Trend stats.
 //
 // TODO: refactor, the code can be improved
-func (o *Output) setTrendStatsResolver(trendStats []string) error {
-	trendStatsCopy := make([]string, 0, len(trendStats))
-	hasSum := false
-	// copy excluding sum
-	for _, stat := range trendStats {
-		if stat == "sum" {
-			hasSum = true
-			continue
-		}
-		trendStatsCopy = append(trendStatsCopy, stat)
-	}
-	resolvers, err := metrics.GetResolversForTrendColumns(trendStatsCopy)
-	if err != nil {
-		return err
-	}
-	// sum is not supported from GetResolversForTrendColumns
-	// so if it has been requested
-	// it adds it specifically
-	if hasSum {
-		resolvers["sum"] = func(t *metrics.TrendSink) float64 {
-			return t.Total()
-		}
-	}
-	o.trendStatsResolver = make(TrendStatsResolver, len(resolvers))
-	for stat, fn := range resolvers {
-		statKey := stat
-
-		// the config passes percentiles with p(x) form, for example p(95),
-		// but the mapping generates series name in the form p95.
-		//
-		// TODO: maybe decoupling mapping from the stat resolver keys?
-		if strings.HasPrefix(statKey, "p(") {
-			statKey = stat[2 : len(statKey)-1]             // trim the parenthesis
-			statKey = strings.ReplaceAll(statKey, ".", "") // remove dots, p(0.95) => p095
-			statKey = "p" + statKey
-		}
-		o.trendStatsResolver[statKey] = fn
-	}
-	return nil
-}
+//func (o *Output) setTrendStatsResolver(trendStats []string) error {
+//	trendStatsCopy := make([]string, 0, len(trendStats))
+//	hasSum := false
+//	// copy excluding sum
+//	for _, stat := range trendStats {
+//		if stat == "sum" {
+//			hasSum = true
+//			continue
+//		}
+//		trendStatsCopy = append(trendStatsCopy, stat)
+//	}
+//	resolvers, err := metrics.GetResolversForTrendColumns(trendStatsCopy)
+//	if err != nil {
+//		return err
+//	}
+// sum is not supported from GetResolversForTrendColumns
+// so if it has been requested
+// it adds it specifically
+//	if hasSum {
+//		resolvers["sum"] = func(t *metrics.TrendSink) float64 {
+//			return t.Total()
+//		}
+//	}
+//	//o.trendStatsResolver = make(TrendStatsResolver, len(resolvers))
+//	for stat, fn := range resolvers {
+//		statKey := stat
+//
+//		// the config passes percentiles with p(x) form, for example p(95),
+//		// but the mapping generates series name in the form p95.
+//		//
+//		// TODO: maybe decoupling mapping from the stat resolver keys?
+//		if strings.HasPrefix(statKey, "p(") {
+//			statKey = stat[2 : len(statKey)-1]             // trim the parenthesis
+//			statKey = strings.ReplaceAll(statKey, ".", "") // remove dots, p(0.95) => p095
+//			statKey = "p" + statKey
+//		}
+//		//o.trendStatsResolver[statKey] = fn
+//	}
+//	return nil
+//}
 
 func (o *Output) flush() {
 	var (
@@ -233,7 +217,7 @@ func (o *Output) flush() {
 	}
 	o.SampleBuffer = output.SampleBuffer{}
 	o.tsdb = make(map[metrics.TimeSeries]*seriesWithMeasure)
-
+	logMemory(o.logger)
 }
 
 func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) []*prompb.TimeSeries {
@@ -253,11 +237,21 @@ func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) 
 		samples := samplesContainer.GetSamples()
 
 		for _, sample := range samples {
+			name := sample.TimeSeries.Metric.Name
+			if name != "http_req_waiting" &&
+				name != "http_req_connecting" &&
+				name != "http_req_tls_handshaking" &&
+				name != "http_req_blocked" &&
+				name != "http_req_receiving" &&
+				name != "http_req_sending" &&
+				name != "http_req_duration" {
+				continue
+			}
 			truncTime := sample.Time.Truncate(time.Millisecond)
 			swm, ok := o.tsdb[sample.TimeSeries]
 			if !ok {
 				// TODO: encapsulate the trend arguments into a Trend Mapping factory
-				swm = newSeriesWithMeasure(sample.TimeSeries, o.config.TrendAsNativeHistogram.Bool, o.trendStatsResolver)
+				//swm = newSeriesWithMeasure(sample.TimeSeries, o.config.TrendAsNativeHistogram.Bool, o.trendStatsResolver)
 				swm.Latest = truncTime
 				o.tsdb[sample.TimeSeries] = swm
 				seen[sample.TimeSeries] = struct{}{}
@@ -299,6 +293,15 @@ func (o *Output) convertToPbSeries(samplesContainers []metrics.SampleContainer) 
 		pbseries = append(pbseries, o.tsdb[s].MapPrompb()...)
 	}
 	return pbseries
+}
+func logMemory(logger logrus.FieldLogger) {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	logger.WithFields(logrus.Fields{
+		"Alloc_MB": m.Alloc / 1024 / 1024,
+		"Heap_MB":  m.HeapAlloc / 1024 / 1024,
+		"Objects":  m.Mallocs - m.Frees,
+	}).Info("Memory stats")
 }
 
 type seriesWithMeasure struct {
@@ -352,11 +355,12 @@ func (swm seriesWithMeasure) MapPrompb() []*prompb.TimeSeries {
 		//	- Add a PrompbMapSinker interface
 		//    and implements it on all the sinks "extending" them.
 		//  - Call directly MapPrompb on Measure without any type assertion.
-		trend, ok := swm.Measure.(prompbMapper)
-		if !ok {
-			panic("Measure for Trend types must implement MapPromPb")
-		}
-		newts = trend.MapPrompb(swm.TimeSeries, swm.Latest)
+		//trend, ok := swm.Measure.(prompbMapper)
+		//if !ok {
+		//	panic("Measure for Trend types must implement MapPromPb")
+		//}
+		//newts = trend.MapPrompb(swm.TimeSeries, swm.Latest)
+		return nil
 
 	default:
 		panic(
@@ -377,7 +381,6 @@ type prompbMapper interface {
 func newSeriesWithMeasure(
 	series metrics.TimeSeries,
 	trendAsNativeHistogram bool,
-	tsr TrendStatsResolver,
 ) *seriesWithMeasure {
 	var sink metrics.Sink
 	switch series.Metric.Type {
@@ -386,7 +389,7 @@ func newSeriesWithMeasure(
 	case metrics.Gauge:
 		sink = &metrics.GaugeSink{}
 	case metrics.Trend:
-		sink = &metrics.TrendSink{}
+		sink = &metrics.GaugeSink{}
 	case metrics.Rate:
 		sink = &metrics.RateSink{}
 	default:
