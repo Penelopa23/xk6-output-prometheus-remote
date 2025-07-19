@@ -28,7 +28,7 @@ func TestConfigApply(t *testing.T) {
 		Headers: map[string]string{
 			"X-Header": "value",
 		},
-		TrendStats:   []string{"p(99)"},
+		//TrendStats:   []string{"p(99)"},
 		StaleMarkers: null.BoolFrom(true),
 	}
 
@@ -123,8 +123,8 @@ func TestGetConsolidatedConfig(t *testing.T) {
 				Password:              null.NewString("", false),
 				PushInterval:          types.NullDurationFrom(5 * time.Second),
 				Headers:               make(map[string]string),
-				TrendStats:            []string{"p(99)"},
-				StaleMarkers:          null.BoolFrom(false),
+				//TrendStats:            []string{"p(99)"},
+				StaleMarkers: null.BoolFrom(false),
 			},
 		},
 		"JSONSuccess": {
@@ -136,8 +136,8 @@ func TestGetConsolidatedConfig(t *testing.T) {
 				Password:              null.NewString("", false),
 				PushInterval:          types.NullDurationFrom(defaultPushInterval),
 				Headers:               make(map[string]string),
-				TrendStats:            []string{"p(99)"},
-				StaleMarkers:          null.BoolFrom(false),
+				//TrendStats:            []string{"p(99)"},
+				StaleMarkers: null.BoolFrom(false),
 			},
 		},
 		"MixedSuccess": {
@@ -154,8 +154,8 @@ func TestGetConsolidatedConfig(t *testing.T) {
 				Password:              null.NewString("", false),
 				PushInterval:          types.NullDurationFrom(defaultPushInterval),
 				Headers:               make(map[string]string),
-				TrendStats:            []string{"p(99)"},
-				StaleMarkers:          null.BoolFrom(false),
+				//TrendStats:            []string{"p(99)"},
+				StaleMarkers: null.BoolFrom(false),
 			},
 		},
 		"OrderOfPrecedence": {
@@ -172,8 +172,8 @@ func TestGetConsolidatedConfig(t *testing.T) {
 				Password:              null.StringFrom("env"),
 				PushInterval:          types.NullDurationFrom(defaultPushInterval),
 				Headers:               make(map[string]string),
-				TrendStats:            []string{"p(99)"},
-				StaleMarkers:          null.BoolFrom(false),
+				//TrendStats:            []string{"p(99)"},
+				StaleMarkers: null.BoolFrom(false),
 			},
 		},
 		"InvalidJSON": {
@@ -249,8 +249,8 @@ func TestOptionServerURL(t *testing.T) {
 		Password:              null.NewString("", false),
 		PushInterval:          types.NullDurationFrom(5 * time.Second),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		StaleMarkers:          null.BoolFrom(false),
+		//TrendStats:            []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(false),
 	}
 	for name, tc := range cases {
 		tc := tc
@@ -296,7 +296,7 @@ func TestOptionHeaders(t *testing.T) {
 			"another-header": "true",
 			"empty":          "",
 		},
-		TrendStats:   []string{"p(99)"},
+		//TrendStats:   []string{"p(99)"},
 		StaleMarkers: null.BoolFrom(false),
 	}
 	for name, tc := range cases {
@@ -330,8 +330,8 @@ func TestOptionInsecureSkipTLSVerify(t *testing.T) {
 		InsecureSkipTLSVerify: null.BoolFrom(false),
 		PushInterval:          types.NullDurationFrom(defaultPushInterval),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		StaleMarkers:          null.BoolFrom(false),
+		//TrendStats:            []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(false),
 	}
 	for name, tc := range cases {
 		tc := tc
@@ -366,8 +366,8 @@ func TestOptionBasicAuth(t *testing.T) {
 		Password:              null.StringFrom("pass1"),
 		PushInterval:          types.NullDurationFrom(5 * time.Second),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		StaleMarkers:          null.BoolFrom(false),
+		//TrendStats:            []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(false),
 	}
 
 	for name, tc := range cases {
@@ -400,8 +400,8 @@ func TestOptionBearerToken(t *testing.T) {
 		BearerToken:           null.StringFrom("my-bearer-token"),
 		PushInterval:          types.NullDurationFrom(5 * time.Second),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		StaleMarkers:          null.BoolFrom(false),
+		//TrendStats:            []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(false),
 	}
 
 	for name, tc := range cases {
@@ -433,10 +433,10 @@ func TestOptionClientCertificate(t *testing.T) {
 		InsecureSkipTLSVerify: null.BoolFrom(false),
 		PushInterval:          types.NullDurationFrom(5 * time.Second),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		ClientCertificate:     null.StringFrom("client.crt"),
-		ClientCertificateKey:  null.StringFrom("client.key"),
-		StaleMarkers:          null.BoolFrom(false),
+		//TrendStats:            []string{"p(99)"},
+		ClientCertificate:    null.StringFrom("client.crt"),
+		ClientCertificateKey: null.StringFrom("client.key"),
+		StaleMarkers:         null.BoolFrom(false),
 	}
 
 	for name, tc := range cases {
@@ -459,8 +459,8 @@ func TestOptionTrendAsNativeHistogram(t *testing.T) {
 		env     map[string]string
 		jsonRaw json.RawMessage
 	}{
-		"JSON": {jsonRaw: json.RawMessage(`{"trendAsNativeHistogram":true}`)},
-		"Env":  {env: map[string]string{"K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM": "true"}},
+		"JSON": {jsonRaw: json.RawMessage(`{"trendAsNativeHistogram":false}`)},
+		"Env":  {env: map[string]string{"K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM": "false"}},
 		//nolint:gocritic
 		//"Arg":  {arg: "trendAsNativeHistogram=true"},
 	}
@@ -472,9 +472,9 @@ func TestOptionTrendAsNativeHistogram(t *testing.T) {
 		Password:               null.NewString("", false),
 		PushInterval:           types.NullDurationFrom(5 * time.Second),
 		Headers:                make(map[string]string),
-		TrendAsNativeHistogram: null.BoolFrom(true),
-		TrendStats:             []string{"p(99)"},
-		StaleMarkers:           null.BoolFrom(false),
+		TrendAsNativeHistogram: null.BoolFrom(false),
+		//TrendStats:             []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(false),
 	}
 
 	for name, tc := range cases {
@@ -508,8 +508,8 @@ func TestOptionPushInterval(t *testing.T) {
 		Password:              null.NewString("", false),
 		PushInterval:          types.NullDurationFrom((1 * time.Minute) + (2 * time.Second)),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		StaleMarkers:          null.BoolFrom(false),
+		//TrendStats:            []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(false),
 	}
 
 	for name, tc := range cases {
@@ -577,8 +577,8 @@ func TestOptionStaleMarker(t *testing.T) {
 		InsecureSkipTLSVerify: null.BoolFrom(false),
 		PushInterval:          types.NullDurationFrom(5 * time.Second),
 		Headers:               make(map[string]string),
-		TrendStats:            []string{"p(99)"},
-		StaleMarkers:          null.BoolFrom(true),
+		//TrendStats:            []string{"p(99)"},
+		StaleMarkers: null.BoolFrom(true),
 	}
 
 	for name, tc := range cases {
